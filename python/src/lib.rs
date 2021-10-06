@@ -72,6 +72,12 @@ struct RawDeltaTableMetaData {
     configuration: HashMap<String, Option<String>>,
 }
 
+#[pyclass]
+struct RawDeltaTableState {
+    #[pyo3(get)]
+    json: String,
+}
+
 #[pymethods]
 impl RawDeltaTable {
     #[new]
@@ -125,6 +131,15 @@ impl RawDeltaTable {
             partition_columns: metadata.partition_columns.clone(),
             created_time: metadata.created_time,
             configuration: metadata.configuration.clone(),
+        })
+    }
+
+    pub fn state(&self) -> PyResult<RawDeltaTableState> {
+        let state = self
+            ._table
+            .get_state();
+        Ok(RawDeltaTableState {
+            json: state.json()
         })
     }
 

@@ -78,6 +78,7 @@ class DeltaTable:
         """
         self._table = RawDeltaTable(table_uri, version=version)
         self._metadata = Metadata(self._table)
+        self._state = json.loads(self._table.state().json)
 
     @classmethod
     def from_data_catalog(
@@ -210,6 +211,14 @@ class DeltaTable:
         :return: the current Metadata registered in the transaction log
         """
         return self._metadata
+
+    def state(self) -> Dict[str, Any]:
+        """
+        Get the current state of the DeltaTable.
+
+        :return: the current State registered in the transaction log
+        """
+        return self._state
 
     def history(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """

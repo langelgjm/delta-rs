@@ -192,7 +192,7 @@ pub enum DeltaTableError {
 }
 
 /// Delta table metadata
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct DeltaTableMetaData {
     /// Unique identifier for this table
     pub id: Guid,
@@ -370,7 +370,7 @@ impl From<StorageError> for LoadCheckpointError {
 }
 
 /// State snapshot currently held by the Delta Table instance.
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize)]
 pub struct DeltaTableState {
     // A remove action should remain in the state of the table as a tombstone until it has expired.
     // A tombstone expires when the creation timestamp of the delta file exceeds the expiration
@@ -466,6 +466,24 @@ impl DeltaTableState {
             self.commit_infos.append(&mut new_state.commit_infos);
         }
     }
+
+    /// Return DeltaTableState as JSON
+    pub fn json(&self) -> String {
+        let j = serde_json::to_string(&self);
+        let v = match j {
+            Ok(data) => data,
+            Err(_) => "Error serializing DeltaTableState to JSON".to_string()
+        };
+
+        return v;
+    }
+
+}
+
+impl fmt::Display for DeltaTableState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.json())
+    }
 }
 
 #[inline]
@@ -491,8 +509,8 @@ pub struct DeltaTable {
     pub version: DeltaDataTypeVersion,
     /// The URI the DeltaTable was loaded from.
     pub table_uri: String,
-
-    state: DeltaTableState,
+    /// The state of the DeltaTable.
+    pub state: DeltaTableState,
 
     // metadata
     // application_transactions

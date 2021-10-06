@@ -614,11 +614,11 @@ dependencies = [
 
 [[package]]
 name = "deltalake-python"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "chrono",
  "deltalake",
- "env_logger 0.9.0",
+ "env_logger 0.7.1",
  "pyo3",
  "reqwest",
  "serde_json",
