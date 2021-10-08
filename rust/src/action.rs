@@ -467,10 +467,13 @@ impl MetaData {
                     }
                 }
                 "schemaString" => {
-                    re.schema_string = record
-                        .get_string(i)
-                        .map_err(|_| gen_action_type_error("metaData", "schemaString", "string"))?
-                        .clone();
+                    // quick hack to bypass the error when reading checkpoints that contain metaData.schemaString with values like
+                    // "spark.watermarkDelayMs": 7200000
+                    re.schema_string = r#"{"type": "struct", "fields": []}"#.to_string();
+                    // re.schema_string = record
+                    //     .get_string(i)
+                    //     .map_err(|_| gen_action_type_error("metaData", "schemaString", "string"))?
+                    //     .clone();
                 }
                 "createdTime" => {
                     re.created_time =
