@@ -15,7 +15,7 @@ use parquet::file::{
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::{Map, Value, json};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt;
@@ -625,7 +625,19 @@ impl DeltaTable {
     ) -> Result<(), ApplyLogError> {
         let mut new_state = DeltaTableState::default();
         for line in reader.lines() {
-            let action: Action = serde_json::from_str(line?.as_str())?;
+            // quick hack to bypass the error when reading checkpoints that contain metaData.schemaString with values like
+            // "spark.watermarkDelayMs": 7200000
+            let action: Action;
+            let line_as_str: String = line.expect("Error getting log line").as_str().to_string();
+
+            if line_as_str.starts_with(r#"{"metaData":"#) {
+                let mut value: Value = serde_json::from_str(&line_as_str).unwrap();
+                *value.pointer_mut("/metaData/schemaString").unwrap() = json!(r#"{"type": "struct", "fields": []}"#).into();
+                action = serde_json::from_str(&value.to_string())?;
+            } else {
+                action = serde_json::from_str(&line_as_str)?;
+            }
+            // let action: Action = serde_json::from_str(line?.as_str())?;
             process_action(&mut new_state, action)?;
         }
 
